@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+	<services>
+		<service id="scheb_two_factor.provider_registry" class="Scheb\TwoFactorBundle\Security\TwoFactor\Provider\TwoFactorProviderRegistry">
+			<argument type="collection" /> <!-- Two-factor providers -->
+		</service>
+
+		<service id="scheb_two_factor.token_factory" alias="scheb_two_factor.default_token_factory" />
+
+		<service id="scheb_two_factor.default_token_factory" class="Scheb\TwoFactorBundle\Security\Authentication\Token\TwoFactorTokenFactory" />
+
+		<service id="scheb_two_factor.authentication_context_factory" class="Scheb\TwoFactorBundle\Security\TwoFactor\AuthenticationContextFactory">
+			<argument>Scheb\TwoFactorBundle\Security\TwoFactor\AuthenticationContext</argument>
+		</service>
+
+		<service id="scheb_two_factor.authenticated_token_handler" class="Scheb\TwoFactorBundle\Security\TwoFactor\Handler\AuthenticatedTokenHandler" lazy="true">
+			<argument type="service" id="scheb_two_factor.ip_whitelist_handler" />
+			<argument>%scheb_two_factor.security_tokens%</argument>
+		</service>
+
+		<service id="scheb_two_factor.ip_whitelist_handler" class="Scheb\TwoFactorBundle\Security\TwoFactor\Handler\IpWhitelistHandler" lazy="true">
+			<argument type="service" id="scheb_two_factor.trusted_device_handler" />
+			<argument type="service" id="scheb_two_factor.ip_whitelist_provider" />
+		</service>
+
+		<service id="scheb_two_factor.default_ip_whitelist_provider" class="Scheb\TwoFactorBundle\Security\TwoFactor\IpWhitelist\DefaultIpWhitelistProvider">
+			<argument>%scheb_two_factor.ip_whitelist%</argument>
+		</service>
+
+		<service id="scheb_two_factor.ip_whitelist_provider" alias="scheb_two_factor.default_ip_whitelist_provider" />
+
+		<service id="scheb_two_factor.trusted_device_handler" class="Scheb\TwoFactorBundle\Security\TwoFactor\Handler\TrustedDeviceHandler" lazy="true">
+			<argument type="service" id="scheb_two_factor.provider_handler" />
+			<argument type="service" id="scheb_two_factor.trusted_device_manager" />
+			<argument>%scheb_two_factor.trusted_device.extend_lifetime%</argument>
+		</service>
+
+		<service id="scheb_two_factor.provider_handler" class="Scheb\TwoFactorBundle\Security\TwoFactor\Handler\TwoFactorProviderHandler" lazy="true">
+			<argument type="service" id="scheb_two_factor.provider_registry" />
+			<argument type="service" id="scheb_two_factor.token_factory" />
+		</service>
+
+		<service id="scheb_two_factor.firewall_context" class="Scheb\TwoFactorBundle\Security\TwoFactor\TwoFactorFirewallContext" public="true">
+			<argument type="collection" /> <!-- Firewall configs -->
+		</service>
+
+		<service id="scheb_two_factor.provider_preparation_recorder" class="Scheb\TwoFactorBundle\Security\TwoFactor\Provider\TwoFactorProviderPreparationRecorder">
+			<argument type="service" id="session" />
+		</service>
+
+		<!-- Alias for auto-wiring -->
+		<service id="Scheb\TwoFactorBundle\Security\TwoFactor\TwoFactorFirewallContext" alias="scheb_two_factor.firewall_context" public="true" />
+
+        <service id="scheb_two_factor.form_controller" class="Scheb\TwoFactorBundle\Controller\FormController" public="true">
+            <argument type="service" id="security.token_storage" />
+            <argument type="service" id="scheb_two_factor.provider_registry" />
+			<argument type="service" id="scheb_two_factor.firewall_context" />
+			<argument type="service" id="security.logout_url_generator" />
+			<argument>%scheb_two_factor.trusted_device.enabled%</argument>
+        </service>
+
+		<service id="scheb_two_factor.security.form_renderer" class="Scheb\TwoFactorBundle\Security\TwoFactor\Provider\DefaultTwoFactorFormRenderer" lazy="true">
+			<argument type="service" id="twig" />
+			<argument>@SchebTwoFactor/Authentication/form.html.twig</argument>
+		</service>
+
+		<!-- Alias for auto-wiring -->
+		<service id="Scheb\TwoFactorBundle\Security\TwoFactor\Provider\TwoFactorFormRendererInterface" alias="scheb_two_factor.security.form_renderer" public="true" />
+	</services>
+</container>
